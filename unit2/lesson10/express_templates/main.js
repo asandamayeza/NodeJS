@@ -1,9 +1,9 @@
 "use strict";
 
-const express = require("express"),
-  app = express(),
-  homeController = require("./controllers/homeController"),
-  layouts = require("express-ejs-layouts");
+const express = require("express");
+const app = express();
+const homeController = require("./controllers/homeController");
+const layouts = require("express-ejs-layouts");
 
 app.set("port", process.env.PORT || 3000);
 app.set("view engine", "ejs");
@@ -14,7 +14,7 @@ app.use(
     extended: false
   })
 );
-app.use(express.json());
+app.use(express.json());//pasrse middleware as json
 
 app.use((req, res, next) => {
   console.log(`request made to: ${req.url}`);
