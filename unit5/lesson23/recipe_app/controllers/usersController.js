@@ -125,16 +125,17 @@ module.exports = {
         next();
       });
   },
-  login: (req, res) => {
+  //...............................................................................................
+  login: (req, res) => { //add the login action
     res.render("users/login");
   },
-  authenticate: (req, res, next) => {
-    User.findOne({ email: req.body.email })
+  authenticate: (req, res, next) => { //Add the authenticate action.
+    User.findOne({ email: req.body.email }) //Compare the form password with the database password.
       .then(user => {
         if (user) {
-          user.passwordComparison(req.body.password)
+          user.passwordComparison(req.body.password) //call the password comparrision method on the user method
             .then(passwordsMatch => {
-              if (passwordsMatch) {
+              if (passwordsMatch) { //check whether the password matches
                 res.locals.redirect = `/users/${user._id}`;
                 req.flash("success", `${user.fullName}'s logged in successfully!`);
                 res.locals.user = user;
@@ -142,7 +143,7 @@ module.exports = {
                 req.flash("error", "Failed to log in user account: Incorrect Password.");
                 res.locals.redirect = "/users/login";
               }
-              next();
+              next(); //calls the next middleware function with redirect path and flash message set
             });
         } else {
           req.flash("error", "Failed to log in user account: User  account not found.");
@@ -150,15 +151,16 @@ module.exports = {
           next();
         }
       })
-      .catch(error => {
+      .catch(error => { //log errors to the console, and passes to the next middleware error handler
         console.log(`Error logging in user: ${error.message}`);
         next(error);
       });
   },
+  //...................................................................................................
   validate: (req, res, next) => {
     req.sanitizeBody("email").normalizeEmail({
       all_lowercase: true
-    }).trim();
+    }).trim(); //remove whitespace with the trim method
     //checks email format
     req.check("email", "Email is invalid").isEmail();
     //checks whether zipcode is 5 digits long
@@ -168,13 +170,13 @@ module.exports = {
     }).equals(req.body.zipCode);
     //checks if password field has been filled
     req.check("password", "Password cannot be empty").notEmpty();
-    req.getValidationResult().then((error) => {
+    req.getValidationResult().then((error) => { //collect the results of previous validations
       if (!error.isEmpty()) {
         let messages = error.array().map(e => e.msg);
-        req.skip = true;
-        req.flash("error", messages.join(" and "));
-        res.locals.redirect = "/users/new";
-        next();
+        req.skip = true; //set skip property to true
+        req.flash("error", messages.join(" and ")); //added error nmessage as flash message
+        res.locals.redirect = "/users/new"; // seet redirecr path for a new view
+        next(); //call the next middleware function
       } else {
         next();
       }

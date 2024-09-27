@@ -1,18 +1,20 @@
 "use strict";
 
-const User = require("../models/user"),
-  passport = require("passport"),
-  getUserParams = body => {
-    return {
-      name: {
-        first: body.first,
-        last: body.last
-      },
-      email: body.email,
-      password: body.password,
-      zipCode: body.zipCode
-    };
+const User = require("../models/user");
+const passport = require('passport');
+//takes a body object as input and returns an object containing
+//specific properties extracted from the body
+const getUserParams = body => {
+  return {
+    name: {
+      first: body.first,
+      last: body.last
+    },
+    email: body.email,
+    password: body.password,
+    zipCode: body.zipCode
   };
+};
 
 module.exports = {
   index: (req, res, next) => {
@@ -27,13 +29,19 @@ module.exports = {
       });
   },
   indexView: (req, res) => {
-    res.render("users/index");
+    res.render("users/index"
+      // {
+      // flashMessages: {
+      //   success: "Loaded all Users!"
+      // }
+      //}
+    );
   },
   new: (req, res) => {
     res.render("users/new");
   },
   create: (req, res, next) => {
-    if (req.skip) next();
+    if (req.skip) return next();
     let newUser = new User(getUserParams(req.body));
     User.register(newUser, req.body.password, (error, user) => {
       if (user) {
@@ -126,25 +134,19 @@ module.exports = {
     successFlash: "Logged in!"
   }),
   validate: (req, res, next) => {
-    req
-      .sanitizeBody("email")
-      .normalizeEmail({
-        all_lowercase: true
-      })
-      .trim();
+    req.sanitizeBody("email").normalizeEmail({
+      all_lowercase: true
+    }).trim();
+    //checks email format
     req.check("email", "Email is invalid").isEmail();
-    req
-      .check("zipCode", "Zip code is invalid")
-      .notEmpty()
-      .isInt()
-      .isLength({
-        min: 5,
-        max: 5
-      })
-      .equals(req.body.zipCode);
+    //checks whether zipcode is 5 digits long
+    req.check("zipCode", "Zip code is invalid").notEmpty().isInt().isLength({
+      min: 5,
+      max: 5
+    }).equals(req.body.zipCode);
+    //checks if password field has been filled
     req.check("password", "Password cannot be empty").notEmpty();
-
-    req.getValidationResult().then(error => {
+    req.getValidationResult().then((error) => {
       if (!error.isEmpty()) {
         let messages = error.array().map(e => e.msg);
         req.skip = true;

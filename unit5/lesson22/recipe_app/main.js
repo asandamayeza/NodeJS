@@ -20,7 +20,7 @@ const connectFlash = require("connect-flash");
 mongoose.Promise = global.Promise;
 
 mongoose.connect(
-  "mongodb://localhost:27017/recipe_db",
+  "mongodb://0.0.0.0:27017/recipe_db",
   { useNewUrlParser: true }
 );
 mongoose.set("useCreateIndex", true);
@@ -51,16 +51,16 @@ router.use(
 router.use(express.json());
 //.......................................................................................................................................
 //Require the three modules.
-router.use(cookieParser("secret_passcode"));
+router.use(cookieParser("secret_passcode")); //configure express.js application to use cookie parser as middleware
  router.use(expressSession({
    secret: "secret_passcode",
    cookie: {
      maxAge: 4000000
    },
-   resave: false,
+   resave: false, 
    saveUninitialized: false
- }));
-router.use(connectFlash());
+ })); //configure express session to use cookie parser
+router.use(connectFlash()); //configure application to use connect-flash as middleware
 
 //Assign flash messages to the local flashMessages variable on the response object.
 router.use((req, res, next) => {

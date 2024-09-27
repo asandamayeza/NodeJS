@@ -1,6 +1,7 @@
 "use strict";
 
 const User = require("../models/user"),
+  passport = require("passport"),
   getUserParams = body => {
     return {
       name: {
@@ -25,43 +26,30 @@ module.exports = {
         next(error);
       });
   },
-  //Pass the flash messages with a rendered view.
   indexView: (req, res) => {
-    res.render("users/index"
-
-    // , {
-    //   flashMessages: {
-    //     success: "Loaded all users!"
-    //   }
-    // }
-  );
+    res.render("users/index");
   },
 
   new: (req, res) => {
     res.render("users/new");
   },
-//...........................................................................................................
-  create: (req, res, next) => {
-    let userParams = getUserParams(req.body);
-
-    User.create(userParams)
-      .then(user => {
-        req.flash("success", `${user.fullName}'s account created
-successfully!`);//Respond with a success flash message.
+//..................................................................................................
+  create: (req, res, next) => { // add the create action to register users
+    if (req.skip) next();
+    let newUser = new User(getUserParams(req.body));
+    User.register(newUser, req.body.password, (e, user) => {
+      if (user) {
+        req.flash("success", `${user.fullName}'s account created successfully!`); //respond with flash messages
         res.locals.redirect = "/users";
-        res.locals.user = user;
         next();
-      })
-      .catch(error => {
-        console.log(`Error saving user: ${error.message}`);
+      } else {
+        req.flash("error", `Failed to create user account because: ${e.message}.`);
         res.locals.redirect = "/users/new";
-        req.flash("error", `Failed to create user account because: ➥${error.message}.`//respond with a failure flash message
-
-        );
         next();
-      });
+      }
+    });
   },
-//...............................................................................................................
+//......................................................................................................
   redirectView: (req, res, next) => {
     let redirectPath = res.locals.redirect;
     if (redirectPath !== undefined) res.redirect(redirectPath);
@@ -128,5 +116,54 @@ successfully!`);//Respond with a success flash message.
         console.log(`Error deleting user by ID: ${error.message}`);
         next();
       });
+  },
+  //...................................................................
+  login: (req, res) => { //Add an action to render my form for browser viewing.
+    res.render("users/login");
+  },
+  
+  validate: (req, res, next) => { // validate action
+    req
+      .sanitizeBody("email")
+      .normalizeEmail({
+        all_lowercase: true
+      })
+      .trim();
+    req.check("email", "Email is invalid").isEmail();
+    req
+      .check("zipCode", "Zip code is invalid")
+      .notEmpty()
+      .isInt()
+      .isLength({
+        min: 5,
+        max: 5
+      })
+      .equals(req.body.zipCode); //Sanitize and check input field data.
+    req.check("password", "Password cannot be empty").notEmpty();
+    req.getValidationResult().then(error => {
+      if (!error.isEmpty()) {
+        let messages = error.array().map(e => e.msg);
+        req.skip = true;
+        req.flash("error", messages.join(" and "));
+        res.locals.redirect = "/users/new"; //Collect errors, and respond with flash messages.
+        next();
+      } else {
+        next();
+      }
+    });
+  },
+  authenticate: passport.authenticate("local", { //Add authentication middleware with redirect and flash- message options
+    failureRedirect: "/users/login",
+    failureFlash: "Failed to login.",
+    successRedirect: "/",
+    successFlash: "Logged in!"
+  }),
+  
+  logout: (req, res, next) => {
+    req.logout();
+    req.flash("success", "You have been logged out!");
+    res.locals.redirect = "/";
+    next();
   }
 };
+//......................................................................

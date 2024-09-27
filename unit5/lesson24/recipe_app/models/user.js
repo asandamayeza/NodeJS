@@ -87,9 +87,9 @@ userSchema.pre("save", function(next) {
 //   let user = this;
 //   return bcrypt.compare(inputPassword, user.password);
 // };
-
+//..............................................................................
 userSchema.plugin(passportLocalMongoose, {
   usernameField: "email"
- });
-
+ }); //Apply the passport-local- mongoose module as a plugin to the user schema.
+//...............................................................................
 module.exports = mongoose.model("User", userSchema);

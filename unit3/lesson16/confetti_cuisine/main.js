@@ -5,6 +5,7 @@ const app = express();
 const errorController = require("./controllers/errorController");
 const homeController = require("./controllers/homeController");
 const layouts = require("express-ejs-layouts");
+//.................................................................................
 const mongoose = require("mongoose");
 const Subscriber = require("./models/subscriber");
 const subscriberController = require("./controllers/subscribersController");
@@ -13,7 +14,7 @@ const subscriberController = require("./controllers/subscribersController");
 mongoose.connect("mongodb://0.0.0.0:27017/confetti_cuisine",
   { useNewUrlParser: true }
 );
-
+//...............................................................................
 const db = mongoose.connection;
 
 db.once("open", () => {

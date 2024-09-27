@@ -15,11 +15,13 @@ const methodOverride = require("method-override");
 const expressSession = require("express-session");
 const cookieParser = require("cookie-parser");
 const connectFlash = require("connect-flash");
-const expressValidator = require("express-validator")
-
+const expressValidator = require("express-validator");
+//................................................................................
+const passport = require("passport"); // require the passport module.
+const User = require("./models/user"); //Require the User model.
+//................................................................................
 
 mongoose.Promise = global.Promise;
-
 
 mongoose.connect(
   "mongodb://0.0.0.0:27017/recipe_db",
@@ -59,9 +61,22 @@ router.use(expressSession({
   resave: false,
   saveUninitialized: false
 }));//session uses cookie-parser
+
 router.use(connectFlash());//flash messages
+//.........................................................................
+router.use(passport.initialize());//initialize passport
+router.use(passport.session());//Configure passport to use sessions in Express.js.
+
+passport.use(User.createStrategy()); //configure the users login strategy
+passport.serializeUser(User.serializeUser());//Set up passport to serialize and deserialize your user data.
+passport.deserializeUser(User.deserializeUser());
+//.............................................................................
+
+
 //assign flash messages to local flashMessages variable
 router.use((req, res, next) => {
+  res.locals.loggedIn = req.isAuthenticated();
+  res.locals.currentUser = req.user;
   res.locals.flashMessages = req.flash();
   next();
 });
@@ -70,16 +85,16 @@ router.use(homeController.logRequestPaths);
 
 router.get("/", homeController.index);
 router.get("/contact", homeController.getSubscriptionPage);
-//.....................................................................................................................
+
 //login routes
-router.get("/users/login", usersController.login); //route to handle GET requests made to /user/logi path
-router.post("/users/login", usersController.authenticate, usersController.redirectView); //route to handle POST req to the same path
-//......................................................................................................................
+router.get("/users/login", usersController.login);
+router.post("/users/login", usersController.authenticate, usersController.redirectView);
+router.get("/users/logout", usersController.logout, usersController.redirectView)
 
 //user routes
 router.get("/users", usersController.index, usersController.indexView);
 router.get("/users/new", usersController.new);
-router.post("/users/create", usersController.validate, usersController.create, usersController.redirectView);//lesson23. added the validatte middleware to the users create route
+router.post("/users/create", usersController.validate, usersController.create, usersController.redirectView);
 router.get("/users/:id", usersController.show, usersController.showView);
 router.get("/users/:id/edit", usersController.edit);
 router.put("/users/:id/update", usersController.update, usersController.redirectView);
