@@ -2,6 +2,7 @@
 
 const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");//encrypt user passwords
+const passportLocalMongoose = require("passport-local-mongoose")
 const { Schema } = mongoose;
 const Subscriber = require("./subscriber");
 
@@ -66,26 +67,29 @@ userSchema.pre("save", function(next) {
     next();
   }
 });
-//.......................................................................................
-//hashes users password
-userSchema.pre("save", function(next) { //Add a pre hook to the user schema.
-  let user = this;
-  bcrypt
-    .hash(user.password, 10)
-    .then(hash => {//hash the users password
-      user.password = hash;
-      next();
-    })
-    .catch(error => {
-      console.log(`Error in hashing password: ${error.message}`);
-      next(error);
-    });
-});
 
-userSchema.methods.passwordComparison = function (inputPassword) {//added a function to compare hashed passwords
-  let user = this;
-  return bcrypt.compare(inputPassword, user.password);//compare the user password with the stored password
-};
-//.............................................................................................
+// //hashes users password
+// userSchema.pre("save", function(next) {
+//   let user = this;
+//   bcrypt
+//     .hash(user.password, 10)
+//     .then(hash => {
+//       user.password = hash;
+//       next();
+//     })
+//     .catch(error => {
+//       console.log(`Error in hashing password: ${error.message}`);
+//       next(error);
+//     });
+// });
 
+// userSchema.methods.passwordComparison = function (inputPassword) {
+//   let user = this;
+//   return bcrypt.compare(inputPassword, user.password);
+// };
+//..............................................................................
+userSchema.plugin(passportLocalMongoose, {
+  usernameField: "email"
+ }); //Apply the passport-local- mongoose module as a plugin to the user schema.
+//...............................................................................
 module.exports = mongoose.model("User", userSchema);
